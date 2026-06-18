@@ -1,1 +1,6 @@
 /.venv/
+/simulator-key.pem
+./simulator/.env
+/simulator/config.json
+/simulator/config_hierarchy.json
+/simulator/config_iot_devices.json

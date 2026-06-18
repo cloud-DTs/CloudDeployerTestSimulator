@@ -1,0 +1,4 @@
+name: CloudDeployerTestSimulator
+runtime: python
+description: Python simulator managed by Pulumi
+main: main.py
