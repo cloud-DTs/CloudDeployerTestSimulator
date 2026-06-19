@@ -15,6 +15,8 @@ Create a python venv and install the requirements.txt
 pulumi login --local
 pulumi package add terraform-provider hashicorp/local
 pulumi stack init dev
+export PULUMI_CONFIG_PASSPHRASE=""
+
 ```
 Enter the input paths in the .env file and paste the config files in the ./input folder
 # Deploy
@@ -27,5 +29,5 @@ Output:
 
 # Connecting to VM directly
 ```bash
-ssh -i simulator-key.pem ubuntu@$(pulumi stack output public_ip)
+ssh -i <(pulumi stack output ssh_private_key --show-secrets) ubuntu@$(pulumi stack output public_ip)
 ```

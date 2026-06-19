@@ -193,15 +193,11 @@ def createVM():
         opts=pulumi.ResourceOptions(depends_on=[ec2Instance]),
     )
 
-    file_resource = local.File(
-        uuid.uuid4().hex,
-        filename="simulator-key.pem",
-        content=ssh_key.private_key_pem,
-        file_permission="0400"
-    )
+
     pulumi.export("public_ip", ec2Instance.public_ip)
     pulumi.export("applicationURL", ec2Instance.public_ip.apply(lambda ip: f"http://{ip}:5000"))
     pulumi.export("app_bucket", app_bucket.bucket)
+    pulumi.export("ssh_private_key", pulumi.Output.secret(ssh_key.private_key_pem))
 
 
 def paste_config_file_in_sim(path_iot, path_config, path_config_hier):
