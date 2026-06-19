@@ -12,6 +12,7 @@ You need pulumi https://www.pulumi.com/docs/install/
 Create a python venv and install the requirements.txt
 # First Time
 ```bash
+pulumi login --local
 pulumi package add terraform-provider hashicorp/local
 pulumi stack init dev
 ```
