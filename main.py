@@ -7,6 +7,11 @@ import tempfile
 import pulumi_tls as tls
 import pulumi
 import pulumi_aws as aws
+import pulumi_std as std
+import pulumi_local as local
+from dotenv import load_dotenv
+import pulumi_command as command
+load_dotenv()
 
 IAC_PATH = "./simulator"
 VM_ROOT_PATH = "simulator"
@@ -24,34 +29,32 @@ def package_directory_to_tar_file(src_dir: str) -> str:
     return tmp_path
 
 
-def get_string_for_user_data(bucket_name: pulumi.Input[str], s3_key: str) -> pulumi.Output[str]:
-    region = aws.get_region().name
-    return pulumi.Output.from_input(bucket_name).apply(lambda bucket: f"""#!/bin/bash
+def get_string_for_user_data(bucket_name, s3_key, app_hash):
+    region = aws.get_region().region
+    return pulumi.Output.all(bucket_name, app_hash).apply(lambda args: f"""#!/bin/bash
+# Config-Trigger-Hash: {args[1]}
 set -ex
 exec > /home/ubuntu/bootstrap.log 2>&1
 
 sudo apt-get update -y
-sudo apt-get install python3-pip python3-flask unzip curl -y
-sudo apt install python3.12-venv -y
+sudo apt-get install -y python3-pip python3.12-venv
+
 mkdir -p /home/ubuntu/app
-
-# Ubuntu's "awscli" apt package is unreliable across releases - install the
-# official AWS CLI v2 directly instead.
-curl -s "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o /tmp/awscliv2.zip
-unzip -q /tmp/awscliv2.zip -d /tmp
-sudo /tmp/aws/install
-which aws
-aws --version
-
-aws s3 cp s3://{bucket}/{s3_key} /tmp/app.tar.gz --region {region}
-tar -xzf /tmp/app.tar.gz -C /home/ubuntu/app/
-ls -la /home/ubuntu/app/
-
 cd /home/ubuntu/app
 sudo python3 -m venv .venv
 sudo chown -R ubuntu:ubuntu /home/ubuntu/app/.venv
-source /home/ubuntu/app/.venv/bin/activate
+source .venv/bin/activate
+
+pip install boto3
+python3 -c "
+import boto3
+boto3.client('s3', region_name='{region}').download_file('{args[0]}', '{s3_key}', '/tmp/app.tar.gz')
+"
+tar -xzf /tmp/app.tar.gz -C /home/ubuntu/app/
+ls -la /home/ubuntu/app/
+
 pip install -r requirements.txt
+
 nohup python3 simulator.py > /home/ubuntu/flask.log 2>&1 &
 """)
 
@@ -84,7 +87,7 @@ def createVM():
         ]
     )
 
-    app_bucket = aws.s3.BucketV2("simulator-app-bucket")
+    app_bucket = aws.s3.Bucket("simulator-app-bucket")
 
     aws.s3.BucketPublicAccessBlock(
         "simulator-app-bucket-pab",
@@ -96,12 +99,15 @@ def createVM():
     )
 
     tar_path = package_directory_to_tar_file(IAC_PATH)
-    app_object = aws.s3.BucketObjectv2(
+
+    pulumi_app_hash = std.filesha256(input=tar_path).result
+
+    app_object = aws.s3.BucketObject(
         "simulator-app-object",
         bucket=app_bucket.id,
         key=S3_KEY,
         source=pulumi.FileAsset(tar_path),
-        source_hash=pulumi.Output.from_input(_sha256_of_file(tar_path)),
+        source_hash=pulumi_app_hash,
     )
 
     iot_role = aws.iam.Role(
@@ -153,6 +159,7 @@ def createVM():
     )
 
     instance_profile = aws.iam.InstanceProfile("simulator-profile", role=iot_role.name)
+
     ec2Instance = aws.ec2.Instance(
         "simulator-vm",
         ami="ami-01e444924a2233b07",
@@ -160,26 +167,38 @@ def createVM():
         instance_type="t3.micro",
         iam_instance_profile=instance_profile.name,
         key_name=key_pair.key_name,
-        user_data=get_string_for_user_data(app_bucket.bucket, S3_KEY),
+        user_data=get_string_for_user_data(app_bucket.bucket, S3_KEY, pulumi_app_hash),
         monitoring=True,
         force_destroy=True,
         user_data_replace_on_change=True,
         opts=pulumi.ResourceOptions(depends_on=[app_object]),
     )
 
+    wait_for_app = command.local.Command(
+        "wait-for-app",
+        create=ec2Instance.public_ip.apply(lambda ip: f"""
+    for i in $(seq 1 60); do
+      if curl -sf -o /dev/null "http://{ip}:5000"; then
+        echo "STARTED"
+        exit 0
+      fi
+      echo "Starting simulator... ($i/60)"
+      sleep 5
+    done
+    echo "Simulator not reachable ERROR" >&2
+    exit 1
+    """),
+        triggers=[pulumi_app_hash],
+        opts=pulumi.ResourceOptions(depends_on=[ec2Instance]),
+    )
+
+    file_resource = local.File("sshFile",
+                               filename="simulator-key.pem",
+                               content=ssh_key.private_key_pem.apply(lambda args: f"{args}"))
+
     pulumi.export("public_ip", ec2Instance.public_ip)
-    pulumi.export("private_key_pem", pulumi.Output.secret(ssh_key.private_key_pem))
-    pulumi.export("applicationURL", pulumi.Output.concat("http://", ec2Instance.public_ip, ":5000"))
+    pulumi.export("applicationURL", ec2Instance.public_ip.apply(lambda ip: f"http://{ip}:5000"))
     pulumi.export("app_bucket", app_bucket.bucket)
-
-
-def _sha256_of_file(path: str) -> str:
-    import hashlib
-    h = hashlib.sha256()
-    with open(path, "rb") as f:
-        for chunk in iter(lambda: f.read(8192), b""):
-            h.update(chunk)
-    return h.hexdigest()
 
 
 def paste_config_file_in_sim(path_iot, path_config, path_config_hier):
@@ -195,10 +214,19 @@ def paste_config_file_in_sim(path_iot, path_config, path_config_hier):
             json.dump(fl, fw, indent=4)
 
 
-config = pulumi.Config()
-iot_path = config.get("config_iot_json_path") or "./iot_device.json"
-config_path = config.get("config_json_path") or "./config.json"
-config_hierarchy = config.get("config_hierarchy_json_path") or "./hierarchy.json"
+iot_path = os.getenv("CONFIG_IOT_JSON_PATH")
+config_path = os.getenv("CONFIG_JSON_PATH")
+config_hierarchy = os.getenv("CONFIG_HIERARCHY_JSON_PATH")
+config_credentials_path = os.getenv("CONFIG_CREDENTIALS_JSON")
+
+
+with open(config_credentials_path, 'r') as f:
+    config_credentials = json.load(f)
+
+if config_credentials:
+    os.environ["AWS_ACCESS_KEY_ID"] = config_credentials.get("aws_access_key_id", "")
+    os.environ["AWS_SECRET_ACCESS_KEY"] = config_credentials.get("aws_secret_access_key", "")
+    os.environ["AWS_DEFAULT_REGION"] = config_credentials.get("aws_region", "")
 
 paste_config_file_in_sim(iot_path, config_path, config_hierarchy)
 createVM()

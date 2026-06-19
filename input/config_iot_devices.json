@@ -1,0 +1,59 @@
+[
+    {
+        "id": "LVjb6NMv7RZFGMdcbirDck",
+        "properties": [
+            {
+                "name": "power",
+                "dataType": "DOUBLE"
+            }
+        ]
+    },
+    {
+        "id": "MKjsFDqWjCxJmcAvj9du6fconst_component",
+        "properties": [
+            {
+                "name": "maxConsumption",
+                "dataType": "DOUBLE",
+                "initValue": 15.0
+            }
+        ]
+    },
+    {
+        "id": "R6yddgbT6AWsYThJtZ4kwk",
+        "properties": [
+            {
+                "name": "consumption",
+                "dataType": "DOUBLE"
+            }
+        ]
+    },
+    {
+        "id": "gUYWWqkbesChFqyn8hwh6dconst_component",
+        "properties": [
+            {
+                "name": "maxConsumption",
+                "dataType": "DOUBLE",
+                "initValue": 50.0
+            }
+        ]
+    },
+    {
+        "id": "fGmQ5iUDCRWaPzpCAbimnX",
+        "properties": [
+            {
+                "name": "consumption",
+                "dataType": "DOUBLE"
+            }
+        ]
+    },
+    {
+        "id": "Z4nLdDKudAfc4RAAXxJDLAconst_component",
+        "properties": [
+            {
+                "name": "maxConsumption",
+                "dataType": "DOUBLE",
+                "initValue": 50.0
+            }
+        ]
+    }
+]

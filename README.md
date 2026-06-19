@@ -6,17 +6,18 @@ An Infrastructure-as-Code (IaC) deployment utility using Pulumi to spin up an EC
 
 ### Install System Dependencies
 Ensure you have the required CLI tools installed and available in your shell's execution path.
-You need pulumi https://www.pulumi.com/docs/install/ and a aws-cli.
+You need pulumi https://www.pulumi.com/docs/install/
 
 # Venv
 Create a python venv and install the requirements.txt
-
+# First Time
+```bash
+pulumi package add terraform-provider hashicorp/local
+pulumi stack init dev
+```
+Enter the input paths in the .env file or paste the config files in the ./input folder
 # Deploy
 ```bash
-pulumi config set config_iot_json_path "/home/marcocotrotzo/PycharmProjects/digital-twin-manager/config_iot_devices.json"
-pulumi config set config_json_path "/home/marcocotrotzo/PycharmProjects/digital-twin-manager/config.json"
-pulumi config set config_hierarchy_json_path "/home/marcocotrotzo/PycharmProjects/digital-twin-manager/config_hierarchy.json"
-pulumi config set aws:region "eu-central-1"
 pulumi up
 ```
 Output:
@@ -24,16 +25,6 @@ Output:
 
 
 # Connecting to VM directly
-## Linux 
 ```bash
-pulumi stack output private_key_pem --show-secrets > simulator-key.pem
-chmod 400 simulator-key.pem
-ssh -i simulator-key.pem ubuntu@$(pulumi stack output public_ip)
-```
-## Windows
-```bash
-pulumi stack output private_key_pem --show-secrets > simulator-key.pem
-icacls simulator-key.pem /inheritance:r
-icacls simulator-key.pem /grant:r "$($env:USERNAME):(R)"
 ssh -i simulator-key.pem ubuntu@$(pulumi stack output public_ip)
 ```

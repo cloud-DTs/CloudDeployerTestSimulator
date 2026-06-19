@@ -1,0 +1,67 @@
+[
+    {
+        "id": "LPD3WBRAR2DosRdZVXrjFj",
+        "type": "entity",
+        "name": "MicroGrid",
+        "children": [
+            {
+                "id": "NoJBoY5sCfJ8TEV5WXGaeQ",
+                "type": "entity",
+                "name": "MicroGrid",
+                "children": [
+                    {
+                        "id": "MKjsFDqWjCxJmcAvj9du6f",
+                        "type": "entity",
+                        "name": "KebaP30",
+                        "children": [
+                            {
+                                "iotDeviceId": "LVjb6NMv7RZFGMdcbirDck",
+                                "type": "component",
+                                "name": "p13"
+                            },
+                            {
+                                "iotDeviceId": "MKjsFDqWjCxJmcAvj9du6fconst_component",
+                                "type": "component",
+                                "name": "KebaP30const_component"
+                            }
+                        ]
+                    },
+                    {
+                        "id": "gUYWWqkbesChFqyn8hwh6d",
+                        "type": "entity",
+                        "name": "SieVersicharge",
+                        "children": [
+                            {
+                                "iotDeviceId": "R6yddgbT6AWsYThJtZ4kwk",
+                                "type": "component",
+                                "name": "p14"
+                            },
+                            {
+                                "iotDeviceId": "gUYWWqkbesChFqyn8hwh6dconst_component",
+                                "type": "component",
+                                "name": "SieVersichargeconst_component"
+                            }
+                        ]
+                    },
+                    {
+                        "id": "Z4nLdDKudAfc4RAAXxJDLA",
+                        "type": "entity",
+                        "name": "SieChargeCC",
+                        "children": [
+                            {
+                                "iotDeviceId": "fGmQ5iUDCRWaPzpCAbimnX",
+                                "type": "component",
+                                "name": "p12"
+                            },
+                            {
+                                "iotDeviceId": "Z4nLdDKudAfc4RAAXxJDLAconst_component",
+                                "type": "component",
+                                "name": "SieChargeCCconst_component"
+                            }
+                        ]
+                    }
+                ]
+            }
+        ]
+    }
+]
