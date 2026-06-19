@@ -194,7 +194,8 @@ def createVM():
 
     file_resource = local.File("sshFile",
                                filename="simulator-key.pem",
-                               content=ssh_key.private_key_pem.apply(lambda args: f"{args}"),file_permission="0400")
+                               content=ssh_key.private_key_pem.apply(lambda args: f"{args}"),
+                               file_permission="0400")
 
     pulumi.export("public_ip", ec2Instance.public_ip)
     pulumi.export("applicationURL", ec2Instance.public_ip.apply(lambda ip: f"http://{ip}:5000"))
