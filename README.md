@@ -26,6 +26,10 @@ pulumi up
 Output:
   ~ applicationURL : "" <--  open in a browser
 
+# Destroy
+```bash
+pulumi destroy
+```
 
 # Connecting to VM directly
 ### For macOS & Linux
