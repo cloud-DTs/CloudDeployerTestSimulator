@@ -7,3 +7,4 @@
 /simulator/config_credentials.json
 ./input/config_credentials.json
 /sdks/
+~/.pulumi/**
