@@ -24,10 +24,16 @@ Enter the input paths in the .env file and paste the config files in the ./input
 pulumi up
 ```
 Output:
-  ~ applicationURL : "" <-- this you can open in a browser
+  ~ applicationURL : "" <--  open in a browser
 
 
 # Connecting to VM directly
+### For macOS & Linux
 ```bash
-ssh -i <(pulumi stack output ssh_private_key --show-secrets) ubuntu@$(pulumi stack output public_ip)
+pulumi stack output ssh_private_key --show-secrets > temp_key.pem && chmod 400 temp_key.pem && ssh -i temp_key.pem ubuntu@$(pulumi stack output public_ip); rm -f temp_key.pem
+```
+
+### For Windows (PowerShell)
+```powershell
+pulumi stack output ssh_private_key --show-secrets | Set-Content -Path temp_key.pem; ssh -i temp_key.pem ubuntu@\$(pulumi stack output public_ip); Remove-Item -Force temp_key.pem
 ```
