@@ -14,8 +14,9 @@ Create a python venv and install the requirements.txt
 ```bash
 pulumi login --local
 pulumi package add terraform-provider hashicorp/local
-pulumi stack init dev
 export PULUMI_CONFIG_PASSPHRASE=""
+pulumi stack init dev
+
 
 ```
 Enter the input paths in the .env file and paste the config files in the ./input folder

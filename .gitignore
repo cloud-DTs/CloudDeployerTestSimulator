@@ -8,3 +8,4 @@
 ./input/config_credentials.json
 /sdks/
 ~/.pulumi/**
+/Pulumi.dev.yaml
