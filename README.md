@@ -15,7 +15,7 @@ Create a python venv and install the requirements.txt
 pulumi package add terraform-provider hashicorp/local
 pulumi stack init dev
 ```
-Enter the input paths in the .env file or paste the config files in the ./input folder
+Enter the input paths in the .env file and paste the config files in the ./input folder
 # Deploy
 ```bash
 pulumi up
