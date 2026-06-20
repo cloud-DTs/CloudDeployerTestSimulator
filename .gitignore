@@ -5,7 +5,8 @@
 /simulator/config_hierarchy.json
 /simulator/config_iot_devices.json
 /simulator/config_credentials.json
-./input/config_credentials.json
+
 /sdks/
 ~/.pulumi/**
 /Pulumi.dev.yaml
+/input/config_credentials.json
