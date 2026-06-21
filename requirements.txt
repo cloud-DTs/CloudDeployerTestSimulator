@@ -3,7 +3,5 @@ nicegui
 pulumi_aws
 pulumi
 pulumi-tls
-sdks/local
-pulumi-local
 pulumi-std
 pulumi-command

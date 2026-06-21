@@ -30,9 +30,8 @@ def package_directory_to_tar_file(src_dir: str) -> str:
     return tmp_path
 
 
-def get_string_for_user_data(bucket_name, s3_key, app_hash):
-    region = aws.get_region().region
-    return pulumi.Output.all(bucket_name, app_hash).apply(lambda args: f"""#!/bin/bash
+def get_string_for_user_data(bucket_name, s3_key, app_hash, aws_provider):
+    return pulumi.Output.all(bucket_name, app_hash, aws_provider.region).apply(lambda args: f"""#!/bin/bash
 # Config-Trigger-Hash: {args[1]}
 set -ex
 exec > /home/ubuntu/bootstrap.log 2>&1
@@ -49,7 +48,7 @@ source .venv/bin/activate
 pip install boto3
 python3 -c "
 import boto3
-boto3.client('s3', region_name='{region}').download_file('{args[0]}', '{s3_key}', '/tmp/app.tar.gz')
+boto3.client('s3', region_name='{args[2]}').download_file('{args[0]}', '{s3_key}', '/tmp/app.tar.gz')
 "
 tar -xzf /tmp/app.tar.gz -C /home/ubuntu/app/
 ls -la /home/ubuntu/app/
@@ -59,8 +58,14 @@ pip install -r requirements.txt
 nohup python3 simulator.py > /home/ubuntu/flask.log 2>&1 &
 """)
 
+def createVM(config_credentials):
+    aws_provider = aws.Provider(
+        "explicit-aws-provider",
+        access_key=config_credentials.get("aws_access_key_id"),
+        secret_key=config_credentials.get("aws_secret_access_key"),
+        region=config_credentials.get("aws_region", "eu-central-1")
+    )
 
-def createVM():
     sec_group = aws.ec2.SecurityGroup(
         "web-secgroup",
         description="Enable SSH and Flask access",
@@ -85,10 +90,14 @@ def createVM():
                 to_port=0,
                 cidr_blocks=["0.0.0.0/0"],
             )
-        ]
+        ],
+        opts=pulumi.ResourceOptions(provider=aws_provider)
     )
 
-    app_bucket = aws.s3.Bucket("simulator-app-bucket")
+    app_bucket = aws.s3.Bucket(
+        "simulator-app-bucket",
+        opts=pulumi.ResourceOptions(provider=aws_provider)
+    )
 
     aws.s3.BucketPublicAccessBlock(
         "simulator-app-bucket-pab",
@@ -97,6 +106,7 @@ def createVM():
         block_public_policy=True,
         ignore_public_acls=True,
         restrict_public_buckets=True,
+        opts=pulumi.ResourceOptions(provider=aws_provider)
     )
 
     tar_path = package_directory_to_tar_file(IAC_PATH)
@@ -109,6 +119,7 @@ def createVM():
         key=S3_KEY,
         source=pulumi.FileAsset(tar_path),
         source_hash=pulumi_app_hash,
+        opts=pulumi.ResourceOptions(provider=aws_provider)
     )
 
     iot_role = aws.iam.Role(
@@ -120,7 +131,8 @@ def createVM():
                 "Effect": "Allow",
                 "Principal": {"Service": "ec2.amazonaws.com"},
             }]
-        })
+        }),
+        opts=pulumi.ResourceOptions(provider=aws_provider)
     )
 
     aws.iam.RolePolicy(
@@ -133,7 +145,8 @@ def createVM():
                 "Action": "iot:Publish",
                 "Resource": "*"
             }]
-        })
+        }),
+        opts=pulumi.ResourceOptions(provider=aws_provider)
     )
 
     aws.iam.RolePolicy(
@@ -146,7 +159,8 @@ def createVM():
                 "Action": "s3:GetObject",
                 "Resource": f"{arn}/{S3_KEY}"
             }]
-        }))
+        })),
+        opts=pulumi.ResourceOptions(provider=aws_provider)
     )
 
     ssh_key = tls.PrivateKey(
@@ -154,12 +168,18 @@ def createVM():
         algorithm="RSA",
         rsa_bits=4096,
     )
+    
     key_pair = aws.ec2.KeyPair(
         "simulator-key",
-        public_key=ssh_key.public_key_openssh
+        public_key=ssh_key.public_key_openssh,
+        opts=pulumi.ResourceOptions(provider=aws_provider)
     )
 
-    instance_profile = aws.iam.InstanceProfile("simulator-profile", role=iot_role.name)
+    instance_profile = aws.iam.InstanceProfile(
+        "simulator-profile", 
+        role=iot_role.name,
+        opts=pulumi.ResourceOptions(provider=aws_provider)
+    )
 
     ec2Instance = aws.ec2.Instance(
         "simulator-vm",
@@ -168,11 +188,11 @@ def createVM():
         instance_type="t3.micro",
         iam_instance_profile=instance_profile.name,
         key_name=key_pair.key_name,
-        user_data=get_string_for_user_data(app_bucket.bucket, S3_KEY, pulumi_app_hash),
+        user_data=get_string_for_user_data(app_bucket.bucket, S3_KEY, pulumi_app_hash, aws_provider),
         monitoring=True,
         force_destroy=True,
         user_data_replace_on_change=True,
-        opts=pulumi.ResourceOptions(depends_on=[app_object]),
+        opts=pulumi.ResourceOptions(depends_on=[app_object], provider=aws_provider),
     )
 
     wait_for_app = command.local.Command(
@@ -192,7 +212,6 @@ def createVM():
         triggers=[pulumi_app_hash],
         opts=pulumi.ResourceOptions(depends_on=[ec2Instance]),
     )
-
 
     pulumi.export("public_ip", ec2Instance.public_ip)
     pulumi.export("applicationURL", ec2Instance.public_ip.apply(lambda ip: f"http://{ip}:5000"))
@@ -218,14 +237,8 @@ config_path = os.getenv("CONFIG_JSON_PATH")
 config_hierarchy = os.getenv("CONFIG_HIERARCHY_JSON_PATH")
 config_credentials_path = os.getenv("CONFIG_CREDENTIALS_JSON")
 
-
 with open(config_credentials_path, 'r') as f:
     config_credentials = json.load(f)
 
-if config_credentials:
-    os.environ["AWS_ACCESS_KEY_ID"] = config_credentials.get("aws_access_key_id", "")
-    os.environ["AWS_SECRET_ACCESS_KEY"] = config_credentials.get("aws_secret_access_key", "")
-    os.environ["AWS_DEFAULT_REGION"] = config_credentials.get("aws_region", "")
-
 paste_config_file_in_sim(iot_path, config_path, config_hierarchy)
-createVM()
+createVM(config_credentials)
