@@ -123,8 +123,16 @@ def build_row(entity: dm.Entity, component: dm.Component, attribute: dm.Attribut
                     with input_container:
                         config_inputs['min'] = ui.input('min').props('dense outlined')
                         config_inputs['max'] = ui.input('max').props('dense outlined')
-
+        
+        def update_field_state():
+            for field in config_inputs.values():
+                if hasattr(field, 'props'):
+                    if sim.is_running(attribute.id):
+                        field.props(add='disable')
+                    else:
+                        field.props(remove='disable')
         render_fields()
+        update_field_state()
 
         def toggle():
             if sim.is_running(attribute.id):
@@ -138,7 +146,7 @@ def build_row(entity: dm.Entity, component: dm.Component, attribute: dm.Attribut
                 sim.start_one(attribute, component.iotDeviceId, config)
                 status_label.text = 'runs'
                 status_label.classes(replace='w-full text-center text-sm font-medium py-1 px-2 rounded bg-green-500 text-white')
-
+            update_field_state()
         ui.button('Start/Stop', on_click=toggle).props('color=primary dense outlined').classes('w-full')
 
 
