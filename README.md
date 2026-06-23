@@ -37,6 +37,10 @@ pulumi destroy
 ```bash
 pulumi stack output ssh_private_key --show-secrets > temp_key.pem && chmod 400 temp_key.pem && ssh -i temp_key.pem ubuntu@$(pulumi stack output public_ip); rm -f temp_key.pem
 ```
+On WSL
+```bash
+pulumi stack output ssh_private_key --show-secrets > /tmp/temp_key.pem && chmod 400 /tmp/temp_key.pem && ssh -i /tmp/temp_key.pem ubuntu@$(pulumi stack output public_ip); rm -f /tmp/temp_key.pem
+````
 
 ### For Windows (PowerShell)
 ```powershell
