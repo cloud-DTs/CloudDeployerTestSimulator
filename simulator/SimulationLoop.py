@@ -1,13 +1,14 @@
 import json
+import os
 import random
 import threading
 import time
 from datetime import datetime, timezone
-
 import boto3
 
-from domain import Attribute, DataType
+from .domain import Attribute, DataType 
 
+CREDENTIALS_PATH = os.path.abspath(os.getenv('CONFIG_CREDENTIALS_JSON', './input/config_credentials.json'))
 
 def safe_float(value, default=0.0):
     if value is None or str(value).strip() == "":
@@ -63,11 +64,23 @@ def generate_value(config: dict, dtype: str):
 
     return 0
 
+class AWS_CREDENTIALS:
+    def __init__(self, credentials_path=CREDENTIALS_PATH):
+        if not os.path.exists(credentials_path):
+            raise FileNotFoundError(f"Credentials file not found: {credentials_path}")
+        with open(credentials_path, 'r') as f:
+            self.credentials = json.load(f)
 
 class SimulationLoop:
-    def __init__(self, topic: str, region: str = "eu-central-1"):
+    def __init__(self, topic: str):
         self.topic = topic
-        self.client = boto3.client('iot-data', region_name=region)
+        creds = AWS_CREDENTIALS().credentials
+        self.client = boto3.client(
+            'iot-data',
+            region_name=creds["aws_region"],
+            aws_access_key_id=creds["aws_access_key_id"],
+            aws_secret_access_key=creds["aws_secret_access_key"],
+        )
         self.active_runs: dict[str, dict] = {}
         self.sim_time = 10.0
 

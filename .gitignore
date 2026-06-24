@@ -10,3 +10,4 @@
 ~/.pulumi/**
 /Pulumi.dev.yaml
 /input/config_credentials.json
+/simulator/_pycache__/

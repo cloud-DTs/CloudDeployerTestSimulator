@@ -2,13 +2,13 @@ import os
 import dotenv
 from nicegui import ui
 
-import domain as dm
-from SimulationLoop import SimulationLoop
+from . import domain as dm
+from .SimulationLoop import SimulationLoop
 
 
-CONFIG_JSON_PATH = './config.json'
-HIERARCHY_JSON_PATH = './config_hierarchy.json'
-IOT_DEVICE_JSON_PATH = './config_iot_devices.json'
+CONFIG_JSON_PATH = os.path.abspath(os.getenv('CONFIG_JSON_PATH', './config.json'))
+HIERARCHY_JSON_PATH = os.path.abspath(os.getenv('CONFIG_HIERARCHY_JSON_PATH', './config_hierarchy.json'))   
+IOT_DEVICE_JSON_PATH = os.path.abspath(os.getenv('CONFIG_IOT_JSON_PATH', './config_iot_devices.json'))
 
 
 def build_row(entity: dm.Entity, component: dm.Component, attribute: dm.Attribute, sim: SimulationLoop):
