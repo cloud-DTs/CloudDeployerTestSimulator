@@ -52,9 +52,11 @@ def build_row(entity: dm.Entity, component: dm.Component, attribute: dm.Attribut
                             elif mode == 'vector_uniform':
                                 config_inputs['vec_min'] = ui.input('vec_min').props('dense outlined')
                                 config_inputs['vec_max'] = ui.input('vec_max').props('dense outlined')
+                            elif mode == 'api':
+                                ui.label('Uses Energy Charts renewable-share forecast (Germany)').classes('text-sm text-slate-600 col-span-3')
 
                     mode_select = ui.select(
-                        ['vector_custom', 'vector_uniform'],
+                        ['vector_custom', 'vector_uniform', 'api'],
                         value='vector_custom',
                         on_change=update_vector_fields,
                     ).props('dense outlined')
@@ -79,9 +81,11 @@ def build_row(entity: dm.Entity, component: dm.Component, attribute: dm.Attribut
                                 config_inputs['list'] = ui.input('list').props('dense outlined')
                             elif mode == 'random_string':
                                 pass
+                            elif mode == 'api':
+                                ui.label('Uses Energy Charts renewable-share forecast (Germany)').classes('text-sm text-slate-600 col-span-3')
 
                     mode_select = ui.select(
-                        ['fixed_list', 'random_string'],
+                        ['fixed_list', 'random_string', 'api'],
                         value='fixed_list',
                         on_change=update_string_fields,
                     ).props('dense outlined')
@@ -112,9 +116,13 @@ def build_row(entity: dm.Entity, component: dm.Component, attribute: dm.Attribut
                                 config_inputs['min'] = ui.input('min').props('dense outlined')
                                 config_inputs['max'] = ui.input('max').props('dense outlined')
                                 config_inputs['step'] = ui.input('step').props('dense outlined')
+                            elif mode == 'cycle':
+                                pass
+                            elif mode == 'api':
+                                ui.label('Uses Energy Charts renewable-share forecast (Germany)').classes('text-sm text-slate-600 col-span-3')
 
                     mode_select = ui.select(
-                        ['uniform', 'normal', 'range'],
+                        ['uniform', 'normal', 'range', 'cycle', 'api'],
                         value='uniform',
                         on_change=update_numeric_fields,
                     ).props('dense outlined')
