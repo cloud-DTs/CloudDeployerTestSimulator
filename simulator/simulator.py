@@ -52,11 +52,11 @@ def build_row(entity: dm.Entity, component: dm.Component, attribute: dm.Attribut
                             elif mode == 'vector_uniform':
                                 config_inputs['vec_min'] = ui.input('vec_min').props('dense outlined')
                                 config_inputs['vec_max'] = ui.input('vec_max').props('dense outlined')
-                            elif mode == 'api':
-                                ui.label('Uses Energy Charts renewable-share forecast (Germany)').classes('text-sm text-slate-600 col-span-3')
 
+                    # 'api' is intentionally not offered for VECTOR attributes: the predefined
+                    # provider yields a scalar. The backend keeps its VECTOR handling for later.
                     mode_select = ui.select(
-                        ['vector_custom', 'vector_uniform', 'api'],
+                        ['vector_custom', 'vector_uniform'],
                         value='vector_custom',
                         on_change=update_vector_fields,
                     ).props('dense outlined')
@@ -117,7 +117,7 @@ def build_row(entity: dm.Entity, component: dm.Component, attribute: dm.Attribut
                                 config_inputs['max'] = ui.input('max').props('dense outlined')
                                 config_inputs['step'] = ui.input('step').props('dense outlined')
                             elif mode == 'cycle':
-                                pass
+                                config_inputs['start'] = ui.number('Start value').props('dense outlined')
                             elif mode == 'api':
                                 ui.label('Uses Energy Charts renewable-share forecast (Germany)').classes('text-sm text-slate-600 col-span-3')
 
@@ -151,6 +151,10 @@ def build_row(entity: dm.Entity, component: dm.Component, attribute: dm.Attribut
                 config = {name: field.value for name, field in config_inputs.items() if
                           name != 'mode' and field in field_box.descendants()}
                 config['mode'] = config_inputs['mode'].value
+                # 'start' is optional: an empty field is not sent at all, so cycle mode
+                # falls back to its existing default and begins at 0
+                if config.get('start') in (None, ''):
+                    config.pop('start', None)
                 sim.start_one(attribute, component.iotDeviceId, config)
                 status_label.text = 'runs'
                 status_label.classes(replace='w-full text-center text-sm font-medium py-1 px-2 rounded bg-green-500 text-white')
