@@ -180,7 +180,7 @@ def index_page():
 
 
 def main():
-    ui.run(host="0.0.0.0", port=5000)
+    ui.run(host="0.0.0.0", port=5000,reload=False)
 
 
 if __name__ in {"__main__", "__mp_main__"}:

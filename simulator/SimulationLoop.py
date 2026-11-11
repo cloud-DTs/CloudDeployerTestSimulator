@@ -74,12 +74,11 @@ class AWS_CREDENTIALS:
 class SimulationLoop:
     def __init__(self, topic: str):
         self.topic = topic
-        creds = AWS_CREDENTIALS().credentials
         self.client = boto3.client(
             'iot-data',
-            region_name=creds["aws_region"],
-            aws_access_key_id=creds["aws_access_key_id"],
-            aws_secret_access_key=creds["aws_secret_access_key"],
+            region_name=os.environ["AWS_REGION"],
+            aws_access_key_id=os.environ["AWS_ACCESS_KEY_ID"],
+            aws_secret_access_key=os.environ["AWS_SECRET_ACCESS_KEY"],
         )
         self.active_runs: dict[str, dict] = {}
         self.sim_time = 10.0
