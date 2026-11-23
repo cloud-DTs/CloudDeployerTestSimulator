@@ -1,15 +1,35 @@
 [
     {
-        "id": "SwiB9jTPm8kzDXz6chmo5T",
+        "id": "VnwJkpzSZmNTZjKDS96ghM",
         "properties": [
             {
-                "name": "isPlugged",
-                "dataType": "STRING"
-            },
-            {
-                "name": "charges",
+                "name": "totalCapacity",
                 "dataType": "INTEGER"
-            },
+            }
+        ]
+    },
+    {
+        "id": "WWBRxzKmtE9TFbUFMgFkBz",
+        "properties": [
+            {
+                "name": "power",
+                "dataType": "DOUBLE"
+            }
+        ]
+    },
+    {
+        "id": "QTKHwk8cPVK5szLFatR7nzconst_component",
+        "properties": [
+            {
+                "name": "maxConsumption",
+                "dataType": "DOUBLE",
+                "initValue": 15.0
+            }
+        ]
+    },
+    {
+        "id": "kQTEEkwsPaTQ6S9FgQBvsy",
+        "properties": [
             {
                 "name": "consumption",
                 "dataType": "DOUBLE"
@@ -17,15 +37,76 @@
         ]
     },
     {
-        "id": "4udMBA6jAnnRf33MNHHP9Pconst_component",
+        "id": "dcRX7gRVBhYoT5rPU2pVvBconst_component",
         "properties": [
             {
-                "name": "trueValue",
-                "dataType": "STRING",
-                "initValue": "true"
-            },
+                "name": "maxConsumption",
+                "dataType": "DOUBLE",
+                "initValue": 50.0
+            }
+        ]
+    },
+    {
+        "id": "SF5G9xybBY8uK8sbVeQDEk",
+        "properties": [
             {
-                "name": "maxTemp",
+                "name": "consumption",
+                "dataType": "DOUBLE"
+            }
+        ]
+    },
+    {
+        "id": "YZcmhr57X8Dy98vrzb4j7aconst_component",
+        "properties": [
+            {
+                "name": "maxConsumption",
+                "dataType": "DOUBLE",
+                "initValue": 50.0
+            }
+        ]
+    },
+    {
+        "id": "MzaceBg5xdNtVufYww8bmH",
+        "properties": [
+            {
+                "name": "output",
+                "dataType": "DOUBLE"
+            }
+        ]
+    },
+    {
+        "id": "9EK8V7oxuumHQWyjEXWDS8",
+        "properties": [
+            {
+                "name": "consumption",
+                "dataType": "DOUBLE"
+            }
+        ]
+    },
+    {
+        "id": "JdUHGLYQ8VdQf3cpyYevBUconst_component",
+        "properties": [
+            {
+                "name": "maxConsumption",
+                "dataType": "DOUBLE",
+                "initValue": 50.0
+            }
+        ]
+    },
+    {
+        "id": "fHujZMcJurWrv5ohiEg3NM",
+        "properties": [
+            {
+                "name": "consumption",
+                "dataType": "DOUBLE"
+            }
+        ]
+    },
+    {
+        "id": "ksEfvjfAUhogL6m32qBsudconst_component",
+        "properties": [
+            {
+                "name": "maxConsumption",
                 "dataType": "DOUBLE",
                 "initValue": 50.0
             }

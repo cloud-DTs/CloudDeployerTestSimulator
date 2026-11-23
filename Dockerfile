@@ -22,4 +22,7 @@ USER simulator
 
 EXPOSE 5000
 
-CMD ["python", "main.py"]
+HEALTHCHECK --interval=5s --timeout=3s --start-period=15s --retries=3 \
+    CMD ["python", "-c", "from urllib.request import urlopen; urlopen('http://127.0.0.1:5000/health', timeout=2).close()"]
+
+ENTRYPOINT ["python", "/app/main.py"]

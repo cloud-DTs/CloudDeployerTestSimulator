@@ -1,24 +1,35 @@
 [
     {
-        "condition": "4udMBA6jAnnRf33MNHHP9P.p16.isPlugged == 4udMBA6jAnnRf33MNHHP9P.Batteryconst_component.trueValue",
+        "condition": "QTKHwk8cPVK5szLFatR7nz.p13.power == QTKHwk8cPVK5szLFatR7nz.KebaP30const_component.maxConsumption",
         "action": {
             "type": "lambda",
-            "pathToCode": "/home/marcocotrotzo/PycharmProjects/SymlCOnv/input/sysml/testLambdaFunctions/battery/status",
-            "functionName": "status",
+            "pathToCode": "lambda_functions/event_actions/high-temperature-callback",
+            "functionName": "stopCharging",
             "external": false,
             "feedback": {
                 "type": "mqtt",
-                "topic": "Battery/iot-data",
+                "iotDeviceId": "WWBRxzKmtE9TFbUFMgFkBz",
                 "payload": "action-result"
             },
             "inputParameters": [
                 {
-                    "name": "chargeValue",
-                    "dataType": "INTEGER",
-                    "id": "4udMBA6jAnnRf33MNHHP9P.p16.charges"
+                    "name": "test2",
+                    "dataType": "DOUBLE",
+                    "id": "QTKHwk8cPVK5szLFatR7nz.p13.power"
+                },
+                {
+                    "name": "test3",
+                    "dataType": "DOUBLE",
+                    "value": 15.0,
+                    "id": "QTKHwk8cPVK5szLFatR7nz.KebaP30const_component.maxConsumption"
                 }
             ],
-            "outputParameters": []
+            "outputParameters": [
+                {
+                    "name": "this_is_some_return_data",
+                    "dataType": "STRING"
+                }
+            ]
         }
     }
 ]

@@ -160,9 +160,10 @@ def test_loading_twice_replaces_previous_entities(load_twin):
 
 
 def test_existing_battery_input_still_loads():
-    folder = Path(__file__).resolve().parents[1] / "input"
+    folder = Path(__file__).resolve().parents[1] / "input" / "battery"
     twin = Twin()
     twin.read_from_json(folder / "config.json", folder / "config_iot_devices.json", folder / "config_hierarchy.json")
+    assert twin.name == "Battery"
     assert len(twin.flatten()) == 5
 
 

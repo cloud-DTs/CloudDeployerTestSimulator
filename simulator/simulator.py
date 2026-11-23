@@ -120,6 +120,11 @@ sim = SimulationLoop(topic=twin.name+"/iot-data", region=AWS_REGION)
 app.on_shutdown(sim.stop_all)
 
 
+@app.get('/health', include_in_schema=False)
+async def health():
+    return {"status": "ok"}
+
+
 @ui.page('/')
 def index_page():
     refreshers = []

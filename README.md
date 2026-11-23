@@ -5,22 +5,24 @@ component's device ID, full Component Type ID, and properties.
 
 ## Local setup
 
-Use Python 3.12 or later. Run these commands from the repository root in PowerShell:
+Use Python 3.12 or later. Run these commands from the repository root in PowerShell.
 
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
 python -m pip install -r requirements.txt
 
-$env:CONFIG_JSON_PATH = './input/config.json'
-$env:CONFIG_HIERARCHY_JSON_PATH = './input/config_hierarchy.json'
-$env:CONFIG_IOT_JSON_PATH = './input/config_iot_devices.json'
-$env:SIMULATOR_MOCK_AWS = 'true'
-python main.py
+python main.py --twin_dir ./input
 ```
 
 Open http://localhost:5000. On Linux or macOS, activate the environment with
-`source .venv/bin/activate` and set the same variables with `export`.
+`source .venv/bin/activate`.
+
+Use `--twin_dir` to select the directory for all three configuration files.
+To select files individually, set `CONFIG_JSON_PATH`, `CONFIG_HIERARCHY_JSON_PATH`,
+and `CONFIG_IOT_JSON_PATH` and run `python main.py`. An explicit `--twin_dir`
+takes precedence over those variables. Each unset path defaults to the
+corresponding file in the current working directory.
 
 Mock mode is the default. Generated messages go to the process log. To publish to AWS, set
 `SIMULATOR_MOCK_AWS=false` and supply AWS credentials with `iot:Publish` access to
@@ -89,13 +91,14 @@ properties on the same device at the same source timestamp: later writes can
 replace earlier properties. Those source records require a single combined
 device message or an atomic merge in the persister.
 
-## Docker and the shared-type example
+## Docker and examples
 
 ```powershell
 docker compose up --build
 ```
 
-The default configuration is in `input/`. To run the two-device example:
+Compose loads the MGrid example from `input/`. The Battery example is in
+`input/battery/`. To run two devices that share a Component Type, use this command sequence.
 
 ```powershell
 $env:SIMULATOR_INPUT_HOST_DIR = './input/shared-component-type'
@@ -103,9 +106,19 @@ docker compose up --build
 ```
 
 To use the manager's configuration files, set `SIMULATOR_INPUT_HOST_DIR` to their
-directory, for example `../digital-twin-manager`. Docker mounts the three files
-as read-only files. For a local Python run, set the three `CONFIG_*_PATH` variables
-to files in the selected directory.
+directory, for example `../digital-twin-manager`. Compose mounts the three files
+as read-only files. The MGrid event configuration uses the example callback in
+`lambda_functions/event_actions/high-temperature-callback` under the manager's repository root.
+
+To run the locally built image directly from PowerShell, mount a configuration directory.
+
+```powershell
+docker run --rm -p 127.0.0.1:5000:5000 --mount "type=bind,source=$((Resolve-Path ./input).Path),target=/twin,readonly" cloud-deployer-test-simulator:local --twin_dir /twin
+```
+
+Docker checks `/health` on port 5000. On a push to `main` or a `v*` tag, the
+GitHub Actions workflow publishes the image to `ghcr.io/<owner>/<repository>`.
+Both parts of the package name use lowercase.
 
 ## Tests
 
