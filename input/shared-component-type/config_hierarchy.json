@@ -6,13 +6,13 @@
         "children": [
             {
                 "type": "component",
-                "name": "Sensor A",
+                "name": "Sensor_A",
                 "iotDeviceId": "sensor-a",
                 "componentTypeId": "temperature-sensor"
             },
             {
                 "type": "component",
-                "name": "Sensor B",
+                "name": "Sensor_B",
                 "iotDeviceId": "sensor-b",
                 "componentTypeId": "temperature-sensor"
             }
