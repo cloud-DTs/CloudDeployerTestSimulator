@@ -1,5 +1,6 @@
 import copy
 import json
+import re
 from pathlib import Path
 
 import pytest
@@ -169,8 +170,11 @@ def test_shared_type_example_loads_two_distinct_devices():
     folder = Path(__file__).resolve().parents[1] / "input" / "shared-component-type"
     twin = Twin()
     twin.read_from_json(folder / "config.json", folder / "config_iot_devices.json", folder / "config_hierarchy.json")
-    assert [bound.iotDeviceId for _, bound, _ in twin.flatten()] == ["sensor-a", "sensor-b"]
-    assert {bound.componentTypeId for _, bound, _ in twin.flatten()} == {"shared-demo-temperature-sensor"}
+    assert re.fullmatch(r"[A-Za-z0-9_-]{1,10}", twin.name)
+    components = [bound for _, bound in twin.components()]
+    assert all(re.fullmatch(r"[A-Za-z0-9_-]+", bound.name) for bound in components)
+    assert [bound.iotDeviceId for bound in components] == ["sensor-a", "sensor-b"]
+    assert {bound.componentTypeId for bound in components} == {f"{twin.name}-temperature-sensor"}
 
 
 def test_schema_validation_includes_type_assignments_from_hierarchy(load_twin):

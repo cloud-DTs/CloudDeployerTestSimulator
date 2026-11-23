@@ -22,6 +22,17 @@ class Attribute:
         self.dataType: DataType = DataType.STRING
         self.id: str = uuid.uuid4().hex
         self.run = False
+        self.generator_config: dict = {}
+
+    @property
+    def generator_mode(self) -> str | None:
+        return self.generator_config.get("mode")
+
+    @generator_mode.setter
+    def generator_mode(self, mode: str) -> None:
+        if mode != self.generator_mode:
+            # Old input controls keep their previous dictionary until each alias redraws.
+            self.generator_config = {"mode": mode}
 
     def read_from_json(self, attribute: dict):
         self.name = attribute["name"]

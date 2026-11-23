@@ -8,10 +8,10 @@ from simulator.domain import Twin
 def test_shared_type_publishes_each_device_id_and_keeps_stop_state_separate(monkeypatch):
     module = importlib.import_module("simulator.SimulationLoop")
     monkeypatch.setenv("SIMULATOR_MOCK_AWS", "true")
-    loop = module.SimulationLoop("shared-demo/iot-data")
     folder = Path(__file__).resolve().parents[1] / "input" / "shared-component-type"
     twin = Twin()
     twin.read_from_json(folder / "config.json", folder / "config_iot_devices.json", folder / "config_hierarchy.json")
+    loop = module.SimulationLoop(f"{twin.name}/iot-data")
     rows = twin.flatten()
     attributes = {bound.iotDeviceId: attribute for _, bound, attribute in rows}
     messages = []
@@ -36,7 +36,7 @@ def test_shared_type_publishes_each_device_id_and_keeps_stop_state_separate(monk
 
     assert [message["iotDeviceId"] for _, _, message in messages] == ["sensor-a", "sensor-b"]
     for topic, qos, message in messages:
-        assert (topic, qos) == ("shared-demo/iot-data", 1)
+        assert (topic, qos) == ("shared-dt/iot-data", 1)
         assert set(message) == {"iotDeviceId", "time", "temperature"}
         assert message["temperature"] == 21.0
         assert message["time"].endswith("Z")

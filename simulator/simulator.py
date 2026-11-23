@@ -11,6 +11,30 @@ IOT_DEVICE_JSON_PATH = os.path.abspath(os.getenv('CONFIG_IOT_JSON_PATH', './conf
 AWS_REGION = os.getenv("AWS_REGION") or os.getenv("AWS_DEFAULT_REGION")
 
 
+MODE_FIELDS = {
+    "fixed": ("value",),
+    "vector_custom": ("vector",),
+    "vector_uniform": ("vec_min", "vec_max"),
+    "fixed_list": ("list",),
+    "uniform": ("min", "max"),
+    "normal": ("mean", "stddev"),
+    "range": ("min", "max", "step"),
+    "cycle": ("start",),
+}
+
+
+def generator_modes(data_type: dm.DataType) -> list[str]:
+    if data_type == dm.DataType.BOOLEAN:
+        return ["fixed", "random_boolean"]
+    if data_type == dm.DataType.VECTOR_STRING:
+        return ["vector_custom"]
+    if data_type in (dm.DataType.VECTOR_INTEGER, dm.DataType.VECTOR_DOUBLE):
+        return ["vector_custom", "vector_uniform"]
+    if data_type == dm.DataType.STRING:
+        return ["fixed_list", "random_string", "api"]
+    return ["uniform", "normal", "range", "cycle", "api"]
+
+
 def build_row(entity: dm.Entity, component: dm.Component, attribute: dm.Attribute, sim: SimulationLoop):
     with ui.row().classes(
             'grid grid-cols-[1.5fr_1.5fr_1.5fr_1.2fr_120px_4fr_120px] items-center gap-4 border-b py-2 w-full font-sans'):
@@ -31,135 +55,32 @@ def build_row(entity: dm.Entity, component: dm.Component, attribute: dm.Attribut
             ).props('role=status aria-live=polite')
             error_label = ui.label('').classes('text-red-700 text-xs break-all')
 
-        config_inputs = {}
-        field_box = ui.row().classes('grid grid-cols-4 gap-2 items-center w-full')
+        modes = generator_modes(attribute.dataType)
+        if attribute.generator_mode is None:
+            attribute.generator_mode = modes[0]
+        with ui.row().classes('grid grid-cols-4 gap-2 items-center w-full'):
+            input_container = ui.row().classes('col-span-3 grid grid-cols-3 gap-1')
+            mode_select = ui.select(modes, value=attribute.generator_mode).props('dense outlined')
+            mode_select.bind_value(attribute, 'generator_mode')
 
         def render_fields():
-            field_box.clear()
-            config_inputs.clear()
-            dtype = attribute.dataType.value
-
-            with field_box:
-                if dtype == "BOOLEAN":
-                    input_container = ui.row().classes('col-span-3 gap-1')
-
-                    def update_boolean_fields(e):
-                        input_container.clear()
-                        config_inputs.pop('value', None)
-                        if e.value == 'fixed':
-                            with input_container:
-                                config_inputs['value'] = ui.switch('Value', value=False)
-
-                    config_inputs['mode'] = ui.select(
-                        ['fixed', 'random_boolean'], value='fixed', on_change=update_boolean_fields,
-                    ).props('dense outlined')
-                    with input_container:
-                        config_inputs['value'] = ui.switch('Value', value=False)
-
-                elif "VECTOR" in dtype:
-                    input_container = ui.row().classes('col-span-3 grid grid-cols-3 gap-1')
-
-                    def update_vector_fields(e):
-                        input_container.clear()
-                        mode = e.value
-
-                        for k in list(config_inputs.keys()):
-                            if k != 'mode':
-                                del config_inputs[k]
-
-                        with input_container:
-                            if mode == 'vector_custom':
-                                config_inputs['vector'] = ui.input('vector').props('dense outlined')
-                            elif mode == 'vector_uniform':
-                                config_inputs['vec_min'] = ui.input('vec_min').props('dense outlined')
-                                config_inputs['vec_max'] = ui.input('vec_max').props('dense outlined')
-
-                    mode_select = ui.select(
-                        ['vector_custom'] if dtype == 'VECTOR_STRING' else ['vector_custom', 'vector_uniform'],
-                        value='vector_custom',
-                        on_change=update_vector_fields,
-                    ).props('dense outlined')
-                    config_inputs['mode'] = mode_select
-
-                    with input_container:
-                        config_inputs['vector'] = ui.input('vector').props('dense outlined')
-
-                elif dtype == "STRING":
-                    input_container = ui.row().classes('col-span-3 grid grid-cols-3 gap-1')
-
-                    def update_string_fields(e):
-                        input_container.clear()
-                        mode = e.value
-
-                        for k in list(config_inputs.keys()):
-                            if k != 'mode':
-                                del config_inputs[k]
-
-                        with input_container:
-                            if mode == 'fixed_list':
-                                config_inputs['list'] = ui.input('list').props('dense outlined')
-                            elif mode == 'random_string':
-                                pass
-                            elif mode == 'api':
-                                ui.label('Uses Energy Charts renewable-share forecast (Germany)').classes('text-sm text-slate-600 col-span-3')
-
-                    mode_select = ui.select(
-                        ['fixed_list', 'random_string', 'api'],
-                        value='fixed_list',
-                        on_change=update_string_fields,
-                    ).props('dense outlined')
-                    config_inputs['mode'] = mode_select
-
-                    with input_container:
-                        config_inputs['list'] = ui.input('list').props('dense outlined')
-
-                else:
-                    input_container = ui.row().classes('col-span-3 grid grid-cols-3 gap-1')
-
-                    def update_numeric_fields(e):
-                        input_container.clear()
-                        mode = e.value
-
-                        for k in list(config_inputs.keys()):
-                            if k != 'mode':
-                                del config_inputs[k]
-
-                        with input_container:
-                            if mode == 'uniform':
-                                config_inputs['min'] = ui.input('min').props('dense outlined')
-                                config_inputs['max'] = ui.input('max').props('dense outlined')
-                            elif mode == 'normal':
-                                config_inputs['mean'] = ui.input('mean').props('dense outlined')
-                                config_inputs['stddev'] = ui.input('stddev').props('dense outlined')
-                            elif mode == 'range':
-                                config_inputs['min'] = ui.input('min').props('dense outlined')
-                                config_inputs['max'] = ui.input('max').props('dense outlined')
-                                config_inputs['step'] = ui.input('step').props('dense outlined')
-                            elif mode == 'cycle':
-                                config_inputs['start'] = ui.number('Start value').props('dense outlined')
-                            elif mode == 'api':
-                                ui.label('Uses Energy Charts renewable-share forecast (Germany)').classes('text-sm text-slate-600 col-span-3')
-
-                    mode_select = ui.select(
-                        ['uniform', 'normal', 'range', 'cycle', 'api'],
-                        value='uniform',
-                        on_change=update_numeric_fields,
-                    ).props('dense outlined')
-                    config_inputs['mode'] = mode_select
-
-                    with input_container:
-                        config_inputs['min'] = ui.input('min').props('dense outlined')
-                        config_inputs['max'] = ui.input('max').props('dense outlined')
-
-        def update_field_state():
-            for field in config_inputs.values():
-                if hasattr(field, 'props'):
-                    if sim.is_running(attribute.id):
-                        field.props(add='disable')
+            input_container.clear()
+            mode = attribute.generator_mode
+            with input_container:
+                if mode == 'api':
+                    ui.label('Uses Energy Charts renewable-share forecast (Germany)').classes(
+                        'text-sm text-slate-600 col-span-3')
+                for name in MODE_FIELDS.get(mode, ()):
+                    if name == 'value':
+                        field = ui.switch('Value', value=False).classes('col-span-3')
+                    elif name == 'start':
+                        field = ui.number('Start value').props('dense outlined')
                     else:
-                        field.props(remove='disable')
+                        field = ui.input(name).props('dense outlined')
+                    field.bind_value(attribute.generator_config, name).bind_enabled_from(mode_select)
+
+        mode_select.on_value_change(render_fields)
         render_fields()
-        update_field_state()
 
         previous_status = None
 
@@ -177,17 +98,13 @@ def build_row(entity: dm.Entity, component: dm.Component, attribute: dm.Attribut
                 + ('bg-green-500' if running else 'bg-red-500')
             ))
             error_label.text = error
-            update_field_state()
+            mode_select.set_enabled(not running)
 
         def toggle():
             if sim.is_running(attribute.id):
                 sim.stop_one(attribute)
             else:
-                config = {name: field.value for name, field in config_inputs.items() if
-                          name != 'mode' and field in field_box.descendants()}
-                config['mode'] = config_inputs['mode'].value
-                # 'start' is optional: an empty field is not sent at all, so cycle mode
-                # falls back to its existing default and begins at 0
+                config = attribute.generator_config.copy()
                 if config.get('start') in (None, ''):
                     config.pop('start', None)
                 sim.start_one(attribute, component.iotDeviceId, config)
